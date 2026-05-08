@@ -5,6 +5,22 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
+## 🏗️ Repository Structure
+
+This repository contains two complementary tools for model cost optimization:
+
+### 📦 **Python Package** (Root Directory)
+- **Installation**: `pip install ningo-model-cost-optimizer`
+- **Purpose**: Core optimization engine and command-line tools
+- **Use Cases**: Batch processing, automation, integration into existing workflows
+
+### 🌐 **Web Testing Interface** ([`/web-interface/`](./web-interface/))
+- **Purpose**: Interactive web application for testing and optimizing prompts
+- **Technology**: Next.js 14 + TypeScript + Tailwind CSS
+- **Use Cases**: Manual testing, prompt experimentation, demonstrations
+- **Deployment**: Ready for Vercel deployment
+- **Documentation**: [Web Interface README](./web-interface/README.md)
+
 ## 🎯 What is Model Cost Optimizer?
 
 Model Cost Optimizer is a toolkit for **dramatically reducing AI costs** by systematically migrating workloads from expensive large models (GPT-4, Claude-3) to cost-effective smaller models (Qwen-4B, Llama-3B) while maintaining or improving performance through intelligent prompt optimization.
@@ -39,7 +55,7 @@ Expensive Large Model          Cost-Effective Small Model + Optimized Prompts
 ### Installation
 
 ```bash
-pip install model-cost-optimizer
+pip install ningo-model-cost-optimizer
 ```
 
 ### Basic Usage

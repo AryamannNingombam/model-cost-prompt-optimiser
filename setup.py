@@ -5,10 +5,10 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="model-cost-optimizer",
+    name="ningo-model-cost-optimizer",
     version="0.1.0",
-    author="Model Cost Optimizer Contributors",
-    description="Reduce AI costs by migrating to smaller models with optimized prompts",
+    author="Ningo AI - Model Cost Optimizer Contributors",
+    description="Reduce AI costs by 90%+ through intelligent model migration with optimized prompts",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=find_packages(),
@@ -29,7 +29,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "model-optimizer=model_optimizer.cli:main",
+            "ningo-model-optimizer=model_optimizer.cli:main",
         ],
     },
 )
