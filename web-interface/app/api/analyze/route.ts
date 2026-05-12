@@ -1,4 +1,11 @@
+import {
+  fireworksChatCompletionsUrl,
+  fireworksEvaluationModel,
+} from '@/lib/fireworks-env'
 import { NextRequest, NextResponse } from 'next/server'
+import { fixTranscriptEncoding } from '@/lib/fix-encoding'
+
+export const dynamic = 'force-dynamic'
 
 interface Variable {
   id: string
@@ -39,14 +46,14 @@ async function analyzeVariable(
   const startTime = Date.now()
 
   try {
-    const response = await fetch('https://api.fireworks.ai/inference/v1/chat/completions', {
+    const response = await fetch(fireworksChatCompletionsUrl(), {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${FIREWORKS_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'accounts/fireworks/models/qwen2p5-14b-instruct',
+        model: fireworksEvaluationModel(),
         messages: [
           {
             role: 'user',
@@ -62,7 +69,9 @@ async function analyzeVariable(
     const latency = endTime - startTime
 
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+      const errorBody = await response.text()
+      console.error(`[analyze] Fireworks API error for ${variable.name}: ${response.status} ${response.statusText}`, errorBody)
+      throw new Error(`API request failed: ${response.status} ${response.statusText} — ${errorBody}`)
     }
 
     const data = await response.json()
@@ -157,15 +166,18 @@ function getDefaultValue(type: 'boolean' | 'string' | 'number'): any {
 export async function POST(request: NextRequest) {
   try {
     const {
-      transcript,
+      transcript: rawTranscript,
       variables,
       optimizationResults,
       promptChoices
     } = await request.json()
 
-    if (!transcript || typeof transcript !== 'string' || !transcript.trim()) {
+    if (!rawTranscript || typeof rawTranscript !== 'string' || !rawTranscript.trim()) {
       return NextResponse.json({ error: 'Transcript is required' }, { status: 400 })
     }
+
+    // Fix encoding issues (e.g. MacRoman-garbled Hindi) before processing
+    const { text: transcript } = fixTranscriptEncoding(rawTranscript)
 
     if (!variables || !Array.isArray(variables) || variables.length === 0) {
       return NextResponse.json({ error: 'Variables array is required' }, { status: 400 })
@@ -195,7 +207,9 @@ export async function POST(request: NextRequest) {
         continue
       }
 
-      const prompt = choice === 'optimized' ? optimization.optimizedPrompt : optimization.originalPrompt
+      const promptTemplate = choice === 'optimized' ? optimization.optimizedPrompt : optimization.originalPrompt
+      // Substitute the current transcript into the prompt template
+      const prompt = promptTemplate.replace(/\{\{transcript\}\}/gi, transcript)
 
       try {
         const result = await analyzeVariable(prompt, variable, choice)

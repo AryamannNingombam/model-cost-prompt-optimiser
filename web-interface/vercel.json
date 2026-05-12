@@ -5,9 +5,9 @@
     },
     "app/api/analyze/route.ts": {
       "maxDuration": 300
+    },
+    "app/api/bulk/start/route.ts": {
+      "maxDuration": 300
     }
-  },
-  "env": {
-    "FIREWORKS_API_KEY": "@fireworks-api-key"
   }
 }

@@ -26,6 +26,7 @@ setup(
         "pandas>=1.5.0",
         "numpy>=1.21.0",
         "click>=8.0.0",
+        "python-dotenv>=1.0.0",
     ],
     entry_points={
         "console_scripts": [

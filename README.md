@@ -1,324 +1,231 @@
-# 💰 Model Cost Optimizer
+# Model Cost & Prompt Optimizer
 
-**Optimize AI costs by migrating from expensive large models to cost-effective smaller models while maintaining performance quality.**
+Optimize AI costs by migrating from expensive large models to cost-effective smaller models (Qwen 4B) while maintaining performance through intelligent prompt optimization.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+**Live App:** [web-interface-sooty.vercel.app](https://web-interface-sooty.vercel.app)
 
-## 🏗️ Repository Structure
+## Video Walkthrough
 
-This repository contains two complementary tools for model cost optimization:
+A video walkthrough demonstrating the full workflow is available here:
 
-### 📦 **Python Package** (Root Directory)
-- **Installation**: `pip install ningo-model-cost-optimizer`
-- **Purpose**: Core optimization engine and command-line tools
-- **Use Cases**: Batch processing, automation, integration into existing workflows
-
-### 🌐 **Web Testing Interface** ([`/web-interface/`](./web-interface/))
-- **Purpose**: Interactive web application for testing and optimizing prompts
-- **Technology**: Next.js 14 + TypeScript + Tailwind CSS
-- **Use Cases**: Manual testing, prompt experimentation, demonstrations
-- **Deployment**: Ready for Vercel deployment
-- **Documentation**: [Web Interface README](./web-interface/README.md)
-
-## 🎯 What is Model Cost Optimizer?
-
-Model Cost Optimizer is a toolkit for **dramatically reducing AI costs** by systematically migrating workloads from expensive large models (GPT-4, Claude-3) to cost-effective smaller models (Qwen-4B, Llama-3B) while maintaining or improving performance through intelligent prompt optimization.
-
-### Key Value Proposition
-
-- 💸 **Cost Reduction**: 80-95% cost savings by switching to smaller models
-- 🎯 **Quality Maintenance**: Automated prompt optimization ensures performance parity
-- 📊 **Performance Validation**: Ground truth comparison before/after migration  
-- 🔄 **Systematic Migration**: Batch process for migrating entire workflows
-- 📈 **ROI Tracking**: Detailed cost savings and performance impact analysis
-
-## 💡 Cost Optimization Strategy
-
-```
-Expensive Large Model          Cost-Effective Small Model + Optimized Prompts
-┌─────────────────┐           ┌──────────────────┐ ┌─────────────────┐
-│   GPT-4 Turbo   │   ────▶   │   Qwen 4B        │ │  Optimized      │
-│   $10/1M tokens │           │   $0.2/1M tokens │+│  Prompts        │
-│   High Cost     │           │   50x Cheaper    │ │  Better Results │
-└─────────────────┘           └──────────────────┘ └─────────────────┘
-```
-
-### Real Cost Impact
-- **Before**: $10,000/month on GPT-4 for call analysis
-- **After**: $500/month on Qwen-4B with optimized prompts  
-- **Savings**: $9,500/month (95% reduction)
-- **Performance**: Same or better accuracy
-
-## 🚀 Quick Start
-
-### Installation
-
-```bash
-pip install ningo-model-cost-optimizer
-```
-
-### Basic Usage
-
-```python
-from model_optimizer import ModelMigrator
-import pandas as pd
-
-# Initialize migrator
-migrator = ModelMigrator(
-    source_model="gpt-4-turbo",           # Expensive model
-    target_model="qwen-4b",               # Cost-effective model
-    optimization_model="minimax-m2p5"     # For prompt optimization
-)
-
-# Test migration for a specific task
-result = migrator.test_migration(
-    task_name="customer_satisfaction",
-    test_data=pd.read_csv("test_data.csv"),
-    ground_truth=pd.read_csv("ground_truth.csv")
-)
-
-print(f"Cost reduction: {result.cost_reduction:.1%}")
-print(f"Performance change: {result.performance_change:+.1%}")
-print(f"Monthly savings: ${result.monthly_savings:,.0f}")
-```
-
-### Command Line Interface
-
-```bash
-# Test migration for single variable
-model-optimizer test-migration customer_satisfaction --samples 50
-
-# Batch migrate all variables
-model-optimizer batch-migrate --config variables.json
-
-# Calculate cost savings
-model-optimizer calculate-savings --current-usage usage.json
-```
-
-## 📊 Use Cases
-
-### 1. **Call Center Analytics** (Primary Use Case)
-- **Task**: Extract 77 variables from call transcripts
-- **Current**: GPT-4 processing 100K calls/month
-- **Migration**: Qwen-4B with optimized prompts
-- **Savings**: $8,500/month (90% reduction)
-
-### 2. **Content Moderation**
-- **Task**: Classify content safety
-- **Current**: Claude-3 Opus for moderation
-- **Migration**: Llama-3-8B with few-shot examples
-- **Savings**: $12,000/month (85% reduction)
-
-### 3. **Document Processing**
-- **Task**: Extract structured data from documents
-- **Current**: GPT-4 for information extraction
-- **Migration**: Qwen-4B with optimized templates
-- **Savings**: $6,200/month (93% reduction)
-
-## 🏗️ Architecture
-
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Large Model    │    │ Migration Engine │    │ Small Model +   │
-│  Performance    │───▶│                  │───▶│ Optimized       │
-│  Benchmark      │    │ - Test Migration │    │ Prompts         │
-└─────────────────┘    │ - Optimize       │    └─────────────────┘
-                       │ - Validate       │              │
-                       └──────────────────┘              ▼
-                                │                ┌─────────────────┐
-                                ▼                │ Performance     │
-                       ┌──────────────────┐     │ Validation      │
-                       │ Cost Calculator  │     │ & Cost Tracking │
-                       │ & ROI Tracker    │     └─────────────────┘
-                       └──────────────────┘
-```
-
-## 📈 Migration Process
-
-### 1. **Baseline Assessment**
-```python
-# Test current large model performance
-baseline = migrator.assess_baseline(
-    model="gpt-4-turbo",
-    tasks=["sentiment", "categorization", "extraction"],
-    sample_size=100
-)
-```
-
-### 2. **Direct Migration Test**
-```python
-# Test small model with existing prompts
-direct_test = migrator.test_direct_migration(
-    target_model="qwen-4b",
-    tasks=baseline.tasks
-)
-```
-
-### 3. **Optimization (if needed)**
-```python
-# Optimize prompts for small model
-if direct_test.performance_drop > 0.05:  # 5% threshold
-    optimized = migrator.optimize_prompts(
-        target_model="qwen-4b",
-        tasks=direct_test.failed_tasks
-    )
-```
-
-### 4. **Validation & Deployment**
-```python
-# Final validation
-final_test = migrator.validate_migration(
-    optimized_prompts=optimized.prompts,
-    sample_size=500
-)
-
-# Calculate savings
-savings = migrator.calculate_savings(
-    current_usage=usage_data,
-    migration_results=final_test
-)
-```
-
-## 💰 Cost Analysis Features
-
-### Detailed Cost Breakdown
-```python
-cost_analysis = migrator.analyze_costs(
-    current_model="gpt-4-turbo",
-    target_model="qwen-4b",
-    monthly_volume=1_000_000_tokens
-)
-
-print(cost_analysis.summary())
-# Current monthly cost: $10,000
-# Target monthly cost: $200  
-# Monthly savings: $9,800 (98%)
-# Annual savings: $117,600
-# Break-even time: Immediate
-```
-
-### ROI Tracking
-```python
-roi_tracker = migrator.track_roi(
-    migration_start_date="2026-01-01",
-    optimization_hours=40,  # Developer time
-    hourly_rate=100
-)
-
-# ROI after 1 month: 2,450% (24.5x return)
-# Payback period: 1.2 days
-```
-
-## 🔧 Configuration
-
-### Cost Optimization Config
-```yaml
-# config.yaml
-cost_optimization:
-  target_cost_reduction: 0.85  # 85% cost reduction target
-  performance_threshold: -0.05  # Allow 5% performance drop
-  optimization_budget: 1000     # Max $ for optimization work
-
-models:
-  expensive:
-    - name: "gpt-4-turbo"
-      cost_per_1m_tokens: 10.00
-    - name: "claude-3-opus" 
-      cost_per_1m_tokens: 15.00
-  
-  cost_effective:
-    - name: "qwen-4b"
-      cost_per_1m_tokens: 0.20
-    - name: "llama-3-8b"
-      cost_per_1m_tokens: 0.15
-```
-
-## 📊 Example Migration Results
-
-### Call Center Variable Extraction
-```
-Task: Extract 77 variables from call transcripts
-Sample Size: 1,000 calls
-
-┌─────────────────┬─────────────┬──────────────┬─────────────┐
-│ Model           │ Accuracy    │ Cost/1K calls│ Monthly Cost│
-├─────────────────┼─────────────┼──────────────┼─────────────┤
-│ GPT-4 Turbo     │ 94.2%       │ $12.50       │ $12,500     │
-│ Qwen-4B (direct)│ 89.1% (-5%) │ $0.25        │ $250        │
-│ Qwen-4B (opt)   │ 95.8% (+2%) │ $0.25        │ $250        │
-└─────────────────┴─────────────┴──────────────┴─────────────┘
-
-Result: 98% cost reduction + 2% performance improvement
-Annual Savings: $147,000
-```
-
-## 🛠️ Advanced Features
-
-### Batch Variable Optimization
-```python
-# Optimize all 77 variables systematically
-batch_results = migrator.batch_optimize_variables(
-    variables_file="variables.json",
-    ground_truth_file="ground_truth.csv",
-    batch_size=10,
-    max_workers=3
-)
-
-# Track progress
-for result in batch_results:
-    print(f"{result.variable}: {result.improvement:+.1%}")
-```
-
-### Custom Optimization Strategies
-```python
-from model_optimizer.strategies import QwenOptimizationStrategy
-
-strategy = QwenOptimizationStrategy(
-    few_shot_examples=3,
-    reasoning_chain=True,
-    output_format="json",
-    temperature=0.3
-)
-
-migrator = ModelMigrator(strategy=strategy)
-```
-
-## 📋 Skills.md Integration
-
-The package includes a comprehensive [SKILLS.md](SKILLS.md) file documenting:
-- Cost optimization methodologies
-- Model selection criteria
-- Prompt engineering techniques
-- Performance validation approaches
-- ROI calculation methods
-
-## 🎯 Target Users
-
-- **Engineering Teams**: Reduce AI infrastructure costs
-- **Product Managers**: Optimize AI feature economics
-- **CFOs/Finance**: Track and control AI spending
-- **Data Scientists**: Maintain model performance at lower cost
-- **Startups**: Scale AI features cost-effectively
-
-## 📚 Documentation
-
-- [📖 Migration Guide](docs/migration-guide.md)
-- [💰 Cost Optimization Strategies](docs/cost-strategies.md)
-- [🔧 API Reference](docs/api-reference.md)
-- [💡 Examples](examples/)
-- [📊 Case Studies](docs/case-studies.md)
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Developed from real-world cost optimization needs
-- Based on proven techniques for model downsizing
-- Inspired by the need to make AI more economically accessible
+[Watch the demo](https://drive.google.com/file/d/14O9haRAl_wq2LV5PYmmxlSqOIwLiTdJc/view?usp=sharing)
 
 ---
 
-**Save 90%+ on AI costs without sacrificing quality** 💰🚀
+## How It Works
+
+The system has two main workflows: **Single Analysis** for testing individual transcripts, and **Bulk Analysis** for processing CSVs at scale.
+
+### Authentication
+
+All access is protected by a daily rotating 6-digit PIN.
+
+1. Visit the app -- you'll be redirected to the login page.
+2. Enter admin credentials (email + password) to reveal today's PIN.
+3. The PIN changes every day at midnight UTC. Share it with your team for that day's access.
+4. Session lasts 24 hours.
+
+### Single Transcript Analysis
+
+This mode lets you test prompt optimization on a single transcript interactively.
+
+**Step 1 -- Input**
+- Paste a call transcript into the text area.
+- Define one or more variables to extract (name, type, description).
+- If the transcript contains garbled Hindi text (MacRoman encoding), it's auto-corrected and a notice is shown.
+
+**Step 2 -- Optimize Prompts**
+- The system sends each variable's prompt to **Minimax M2P7** (the optimizer model) to rewrite it following Qwen 4B best practices.
+- You see the original vs optimized prompt side-by-side, with a list of improvements and rationale.
+- Choose which prompt (original or optimized) to use for each variable.
+
+**Step 3 -- Analyze**
+- The selected prompts are sent to the **Qwen 4B** evaluation model along with the transcript.
+- Results show the extracted value, reasoning, latency, and raw model output for each variable.
+- Failed results can be retried individually or in bulk.
+
+**Try Another Transcript**
+- After viewing results, click "Try Another Transcript" to reuse the same variables and optimized prompts with a new transcript -- no need to re-optimize.
+
+### Bulk Transcript Analysis
+
+This mode processes hundreds or thousands of transcripts against multiple variables in the background.
+
+**Input**
+
+1. **CSV File** -- Upload a CSV with these columns:
+   - Required: `interaction_id`, `contact_id`, `transcript`
+   - Optional: `scheduled_time`, `campaign_name`, `schedule_start_at`, `schedule_end_at`
+   - Ground truth (optional): For each variable, include `{var_name}_value` and `{var_name}_reason` columns to enable accuracy comparison.
+
+2. **Variables JSON** -- Paste or upload a JSON array. Each variable needs:
+   ```json
+   {
+     "var_name": "rebooked_pickup",
+     "var_type": "boolean",
+     "description": "Your prompt instructions here..."
+   }
+   ```
+
+**Processing**
+
+- All (row x variable) combinations are flattened into tasks.
+- Tasks run **10 at a time** concurrently for speed.
+- Each transcript is sent to Qwen 4B with the extraction prompt. The model returns `{"value": ..., "reason": "..."}`.
+- If ground truth columns exist:
+  - `value` is compared directly (case-insensitive for booleans).
+  - On mismatch, both reasonings are sent to **Minimax M2P7** to analyze the difference.
+- Progress is shown live with a progress bar, current row, and current variable.
+
+**Partial Downloads**
+
+- Results CSV and Metrics CSV are written after every batch of 10 tasks.
+- You can download partial results at any time while the job is running -- no need to wait for completion.
+
+**Cancellation**
+
+- Click "Cancel" on a running job to stop it after the current batch.
+- Partial results remain downloadable.
+
+**Output Files**
+
+1. **Results CSV** -- Contains all original CSV columns plus, for each variable:
+   - `{var_name}_predicted_value` -- the model's extracted value
+   - `{var_name}_predicted_reason` -- the model's reasoning
+   - `{var_name}_match` -- whether prediction matches ground truth (if GT exists)
+   - `{var_name}_difference` -- Minimax analysis of why the prediction differs (only on mismatches)
+
+2. **Metrics CSV** -- For each variable with ground truth:
+   - `accuracy`, `precision`, `recall`, `f1_score`
+   - `true_positives`, `false_positives`, `true_negatives`, `false_negatives`
+   - `total_rows`
+
+**File Retention**
+
+- Job files are retained for **2 hours** after creation, then automatically cleaned up.
+
+### Validation Warnings
+
+When both CSV and variables are loaded, the system cross-validates:
+
+- Missing required CSV columns (`transcript`, `interaction_id`).
+- Per variable: whether `{var_name}_value` and `{var_name}_reason` columns exist.
+- Warns if `_value` exists without `_reason` (difference analysis will be limited).
+- Warns if neither exists (analysis-only mode, no ground truth comparison).
+
+---
+
+## Architecture
+
+```
+User
+ |
+ v
+[Login Page] -- credentials --> [/api/auth/login] --> session cookie
+ |
+ v
+[Single Analysis]                    [Bulk Analysis]
+ |                                    |
+ |-- /api/optimize                    |-- /api/bulk/start
+ |   (Minimax M2P7 rewrites          |   (parse CSV, create background job)
+ |    prompts for Qwen 4B)           |
+ |                                    |-- Background runner
+ |-- /api/analyze                     |   (10 concurrent API calls per batch)
+ |   (Qwen 4B extracts values        |   |
+ |    from transcript)                |   |-- Qwen 4B: extract value + reason
+ |                                    |   |-- Minimax M2P7: diff analysis (on mismatch)
+ v                                    |   |-- Write partial results after each batch
+[Results + Retry]                     |
+                                      |-- /api/bulk/status/{id} (poll progress)
+                                      |-- /api/bulk/download/{id} (download CSV)
+                                      |-- /api/bulk/cancel/{id} (stop job)
+```
+
+### Models Used
+
+| Model | Role | Purpose |
+|-------|------|---------|
+| Qwen 4B (`accounts/aryamann-ii2ajvi2ui7/deployments/gb1zhixe`) | Evaluation | Transcript analysis and variable extraction |
+| Minimax M2P7 (`accounts/fireworks/models/minimax-m2p7`) | Optimizer | Prompt rewriting and difference analysis |
+
+Both models are accessed via the Fireworks AI inference API.
+
+### Encoding Fix
+
+Transcripts containing Hindi (Devanagari) text that was corrupted by MacRoman encoding are automatically detected and corrected. The fix reverses the byte-level corruption by mapping MacRoman-interpreted characters back to their original UTF-8 bytes.
+
+---
+
+## Setup
+
+### Environment Variables
+
+```
+FIREWORKS_API_KEY=fw_your_key_here
+AUTH_EMAIL=your@email.com
+AUTH_PASSWORD=your_password
+SESSION_SECRET=random-64-char-string
+FIREWORKS_OPTIMIZER_MODEL=accounts/fireworks/models/minimax-m2p7
+FIREWORKS_EVALUATION_MODEL=accounts/aryamann-ii2ajvi2ui7/deployments/gb1zhixe
+```
+
+### Local Development
+
+```bash
+cd web-interface
+cp .env.local.example .env.local   # fill in your values
+npm install
+npm run dev
+```
+
+### Deploy to Vercel
+
+```bash
+cd web-interface
+vercel link
+vercel env add FIREWORKS_API_KEY production
+vercel env add AUTH_EMAIL production
+vercel env add AUTH_PASSWORD production
+vercel env add SESSION_SECRET production
+vercel env add FIREWORKS_OPTIMIZER_MODEL production
+vercel env add FIREWORKS_EVALUATION_MODEL production
+vercel --prod
+```
+
+> **Note:** Bulk analysis background jobs use local filesystem storage. On Vercel's serverless architecture, the filesystem is ephemeral. For production bulk analysis, use a persistent storage backend.
+
+---
+
+## Project Structure
+
+```
+web-interface/
+  app/
+    page.tsx                          # Single analysis UI
+    bulk/page.tsx                     # Bulk analysis UI
+    pin/page.tsx                      # Login page
+    api/
+      auth/login/route.ts            # Credential login
+      auth/pin/route.ts              # Daily PIN endpoint
+      optimize/route.ts              # Prompt optimization
+      analyze/route.ts               # Single transcript analysis
+      bulk/start/route.ts            # Start bulk job
+      bulk/status/[jobId]/route.ts   # Poll job progress
+      bulk/download/[jobId]/route.ts # Download results
+      bulk/cancel/[jobId]/route.ts   # Cancel running job
+      bulk/list/route.ts             # List all jobs
+  lib/
+    fireworks-env.ts                  # API configuration
+    fix-encoding.ts                   # MacRoman mojibake fixer
+    auth.ts                           # Auth helpers
+    bulk-job-runner.ts                # Core batch processing engine
+    bulk-job-store.ts                 # Filesystem job storage
+    bulk-csv.ts                       # CSV parse/generate
+    bulk-metrics.ts                   # Accuracy/precision/recall/F1
+    bulk-cleanup.ts                   # Auto-delete expired jobs
+  middleware.ts                       # Auth middleware (all routes)
+```
+
+## License
+
+MIT

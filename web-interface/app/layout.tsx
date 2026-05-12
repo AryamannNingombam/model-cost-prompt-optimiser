@@ -26,9 +26,10 @@ export default function RootLayout({
                     Testing Interface
                   </span>
                 </div>
-                <div className="text-sm text-gray-500">
-                  Reduce AI costs by 90%+ with intelligent optimization
-                </div>
+                <nav className="flex items-center space-x-4 text-sm">
+                  <a href="/" className="text-gray-600 hover:text-gray-900 font-medium">Single</a>
+                  <a href="/bulk" className="text-gray-600 hover:text-gray-900 font-medium">Bulk Analysis</a>
+                </nav>
               </div>
             </div>
           </header>

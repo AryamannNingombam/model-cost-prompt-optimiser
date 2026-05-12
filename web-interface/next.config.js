@@ -1,8 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  env: {
-    FIREWORKS_API_KEY: process.env.FIREWORKS_API_KEY || '',
-  },
-}
+const nextConfig = {}
 
 module.exports = nextConfig

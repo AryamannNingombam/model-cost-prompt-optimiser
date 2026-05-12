@@ -1,4 +1,12 @@
+import {
+  fireworksChatCompletionsUrl,
+  fireworksOptimizerModel,
+} from '@/lib/fireworks-env'
+
 import { NextRequest, NextResponse } from 'next/server'
+import { fixTranscriptEncoding } from '@/lib/fix-encoding'
+
+export const dynamic = 'force-dynamic'
 
 interface Variable {
   id: string
@@ -17,8 +25,9 @@ interface OptimizationResult {
 
 const FIREWORKS_API_KEY = process.env.FIREWORKS_API_KEY
 
-// Generate original prompt for a variable
-function generateOriginalPrompt(variable: Variable, transcript: string): string {
+// Generate original prompt template for a variable.
+// Uses {{transcript}} as a placeholder — the analyze route substitutes the real transcript.
+function generateOriginalPrompt(variable: Variable): string {
   const typeInstructions = {
     boolean: 'Respond with only "true" or "false"',
     string: 'Respond with a short descriptive string',
@@ -32,7 +41,7 @@ Expected Type: ${variable.type}
 
 Instructions: ${typeInstructions[variable.type]}
 
-Transcript: ${transcript}
+Transcript: {{transcript}}
 
 Please analyze the transcript and provide the value for "${variable.name}".`
 }
@@ -47,47 +56,51 @@ async function optimizePrompt(originalPrompt: string, variable: Variable): Promi
     throw new Error('FIREWORKS_API_KEY not configured')
   }
 
-  const optimizationInstruction = `You are an AI prompt optimization expert specializing in model cost reduction through efficient prompting for smaller models like Qwen-4B.
+  const optimizationInstruction = `
+  You are an AI prompt optimization expert specializing in model cost reduction through efficient prompting for smaller models like Qwen-4B.
 
-Your task is to optimize the following prompt for better performance on smaller language models while maintaining accuracy.
+  Your task is to optimize the following prompt TEMPLATE for better performance on smaller language models while maintaining accuracy.
 
-Original Prompt:
-${originalPrompt}
+  IMPORTANT: The prompt contains a placeholder {{transcript}} where the actual call transcript will be inserted at runtime. You MUST keep {{transcript}} as-is in your optimized prompt — do NOT remove, replace, or rename it.
 
-Variable Information:
-- Name: ${variable.name}
-- Type: ${variable.type}
-- Description: ${variable.description}
+  Original Prompt Template:
+  ${originalPrompt}
 
-Optimization Guidelines:
-1. Use clear, direct language
-2. Reduce ambiguity and unnecessary words
-3. Structure information logically
-4. Use specific formatting instructions
-5. Add context clues for better understanding
-6. Optimize for JSON output if applicable
+  Variable Information:
+  - Name: ${variable.name}
+  - Type: ${variable.type}
+  - Description: ${variable.description}
 
-Please provide:
-1. An optimized version of the prompt
-2. A list of specific improvements made
-3. Rationale for the optimization choices
+  Optimization Guidelines:
+  1. Use clear, direct language
+  2. Reduce ambiguity and unnecessary words
+  3. Structure information logically
+  4. Use specific formatting instructions
+  5. Add context clues for better understanding
+  6. Optimize for JSON output if applicable
+  7. MUST include {{transcript}} placeholder in the optimized prompt
 
-Format your response as JSON:
-{
-  "optimizedPrompt": "...",
-  "improvements": ["improvement 1", "improvement 2", ...],
-  "rationale": "explanation of optimization strategy"
-}`
+  Please provide:
+  1. An optimized version of the prompt (must include {{transcript}} placeholder)
+  2. A list of specific improvements made
+  3. Rationale for the optimization choices
+
+  Format your response as JSON:
+  {
+    "optimizedPrompt": "... {{transcript}} ...",
+    "improvements": ["improvement 1", "improvement 2", ...],
+    "rationale": "explanation of optimization strategy"
+  }`
 
   try {
-    const response = await fetch('https://api.fireworks.ai/inference/v1/chat/completions', {
+    const response = await fetch(fireworksChatCompletionsUrl(), {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${FIREWORKS_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'accounts/fireworks/models/mixtral-8x7b-instruct',
+        model: fireworksOptimizerModel(),
         messages: [
           {
             role: 'user',
@@ -100,7 +113,9 @@ Format your response as JSON:
     })
 
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+      const errorBody = await response.text()
+      console.error(`[optimize] Fireworks API error for ${variable.name}: ${response.status} ${response.statusText}`, errorBody)
+      throw new Error(`API request failed: ${response.status} ${response.statusText} — ${errorBody}`)
     }
 
     const data = await response.json()
@@ -149,20 +164,23 @@ Format your response as JSON:
 
 export async function POST(request: NextRequest) {
   try {
-    const { variables, transcript } = await request.json()
+    const { variables, transcript: rawTranscript } = await request.json()
 
     if (!variables || !Array.isArray(variables) || variables.length === 0) {
       return NextResponse.json({ error: 'Variables array is required' }, { status: 400 })
     }
 
-    if (!transcript || typeof transcript !== 'string' || !transcript.trim()) {
+    if (!rawTranscript || typeof rawTranscript !== 'string' || !rawTranscript.trim()) {
       return NextResponse.json({ error: 'Transcript is required' }, { status: 400 })
     }
+
+    // Fix encoding issues (e.g. MacRoman-garbled Hindi) before processing
+    const { text: transcript } = fixTranscriptEncoding(rawTranscript)
 
     const results: OptimizationResult[] = []
 
     for (const variable of variables) {
-      const originalPrompt = generateOriginalPrompt(variable, transcript)
+      const originalPrompt = generateOriginalPrompt(variable)
 
       try {
         const optimization = await optimizePrompt(originalPrompt, variable)

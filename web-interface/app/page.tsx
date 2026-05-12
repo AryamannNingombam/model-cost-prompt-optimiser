@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { PlayIcon, SparklesIcon, ClockIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
+import { useState, useCallback } from 'react'
+import { PlayIcon, SparklesIcon, ClockIcon, DocumentTextIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import VariableInput from './components/VariableInput'
 import ResultsDisplay from './components/ResultsDisplay'
 import PromptOptimizer from './components/PromptOptimizer'
+import { fixTranscriptEncoding, hasMojibake } from '@/lib/fix-encoding'
 
 interface Variable {
   id: string
@@ -38,10 +39,27 @@ export default function Home() {
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [currentStep, setCurrentStep] = useState<'input' | 'optimize' | 'results'>('input')
+  const [encodingFixed, setEncodingFixed] = useState(false)
+
+  const handleTranscriptChange = useCallback((value: string) => {
+    const { text, wasFixed } = fixTranscriptEncoding(value)
+    setTranscript(text)
+    setEncodingFixed(wasFixed)
+  }, [])
+
+  // True when we came back via "Try Another Transcript" and already have optimized prompts
+  const hasExistingOptimization = optimizationResults.length > 0
 
   const handleOptimizePrompts = async () => {
     if (!transcript.trim() || variables.length === 0) {
       alert('Please provide a transcript and at least one variable')
+      return
+    }
+
+    // If we already have optimization results (from a previous run), skip re-optimizing
+    if (hasExistingOptimization) {
+      setAnalysisResults([])
+      setCurrentStep('optimize')
       return
     }
 
@@ -66,6 +84,7 @@ export default function Home() {
   }
 
   const handleRunAnalysis = async (promptChoices: Record<string, 'original' | 'optimized'>) => {
+    setAnalysisResults([])
     setIsAnalyzing(true)
     setCurrentStep('results')
 
@@ -97,6 +116,14 @@ export default function Home() {
     setOptimizationResults([])
     setAnalysisResults([])
     setCurrentStep('input')
+  }
+
+  const handleNewTranscript = () => {
+    setTranscript('')
+    setAnalysisResults([])
+    setEncodingFixed(false)
+    setCurrentStep('input')
+    // variables and optimizationResults are preserved
   }
 
   return (
@@ -151,10 +178,19 @@ export default function Home() {
             </div>
             <textarea
               value={transcript}
-              onChange={(e) => setTranscript(e.target.value)}
+              onChange={(e) => handleTranscriptChange(e.target.value)}
               placeholder="Paste your call transcript here..."
               className="textarea h-32 w-full"
             />
+            {encodingFixed && (
+              <div className="flex items-start space-x-2 mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-amber-800">
+                  <p className="font-medium">Encoding auto-corrected</p>
+                  <p>The transcript contained garbled Hindi text (MacRoman encoding issue). It has been automatically converted to proper Devanagari script.</p>
+                </div>
+              </div>
+            )}
             <p className="text-sm text-gray-500 mt-2">
               Provide the call transcript that you want to analyze for variable extraction.
             </p>
@@ -165,12 +201,21 @@ export default function Home() {
             onVariablesChange={setVariables}
           />
 
+          {hasExistingOptimization && (
+            <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <DocumentTextIcon className="w-5 h-5 text-blue-600 flex-shrink-0" />
+              <p className="text-sm text-blue-800">
+                Variables and optimized prompts from your previous session are preserved. Paste a new transcript and continue to analysis.
+              </p>
+            </div>
+          )}
+
           <div className="flex justify-between">
             <button
               onClick={resetForm}
               className="btn-secondary px-4 py-2"
             >
-              Reset Form
+              Reset All
             </button>
             <button
               onClick={handleOptimizePrompts}
@@ -178,7 +223,7 @@ export default function Home() {
               className="btn-primary px-6 py-2 flex items-center space-x-2"
             >
               <SparklesIcon className="w-4 h-4" />
-              <span>{isOptimizing ? 'Optimizing...' : 'Optimize Prompts'}</span>
+              <span>{isOptimizing ? 'Optimizing...' : hasExistingOptimization ? 'Use Existing Prompts' : 'Optimize Prompts'}</span>
             </button>
           </div>
         </div>
@@ -198,6 +243,47 @@ export default function Home() {
         <ResultsDisplay
           results={analysisResults}
           onStartOver={resetForm}
+          onNewTranscript={handleNewTranscript}
+          onRetry={async (variableNames) => {
+            setIsAnalyzing(true)
+            try {
+              // Build promptChoices and filter variables for just the ones being retried
+              const retryVariables = variables.filter(v => variableNames.includes(v.name))
+              const promptChoices: Record<string, 'original' | 'optimized'> = {}
+              for (const r of analysisResults) {
+                if (variableNames.includes(r.variable)) {
+                  promptChoices[r.variable] = r.promptUsed
+                }
+              }
+
+              const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  transcript,
+                  variables: retryVariables,
+                  optimizationResults,
+                  promptChoices
+                })
+              })
+
+              const retryResults: AnalysisResult[] = await response.json()
+
+              // Merge retry results back into the full results list
+              setAnalysisResults(prev =>
+                prev.map(existing => {
+                  const updated = retryResults.find(r => r.variable === existing.variable)
+                  return updated ?? existing
+                })
+              )
+            } catch (error) {
+              console.error('Retry failed:', error)
+              alert('Retry failed. Please try again.')
+            } finally {
+              setIsAnalyzing(false)
+            }
+          }}
+          isRetrying={isAnalyzing}
         />
       )}
 
